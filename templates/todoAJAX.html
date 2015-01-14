@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shulin's to-do-list</title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script type="text/javascript">
+    //non-conflict mode, for safety's sake
+    jQuery(function($){
+      //add a plugin method named addToDoList
+      jQuery.fn.addToDoList=function(){
+         //to set up the basic row of the to-do-list
+        var constructor = '<div class="eachList">' 
+                            + '<form id="formAdd" method="POST" action="/" role="form">'
+                              +	'<input type="text" name="userInput" id="eachItem" placeholder="Description">'
+                              +	'<input type="submit" id="submit" name="submitName" value="Add to List">'
+                            +	'</form>'
+                            +	'<ul class="list"> </ul>'
+                          +	'</div>';
+
+        // <input type="email" name="username" class="form-control" placeholder="Email address" required autofocus>
+        //insert the constructor(html snippet) to the DOM 
+        $(this).prepend(constructor); 
+
+        //submit event
+        $("#formAdd").on("submit", function(event){
+	
+          //prevent the default action of submit to jump to another page
+          event.preventDefault();
+	
+          //declaration. .val() works on input elements, while .text() will not.
+          var content = $("#eachItem").val();
+	
+          //if the "Description text is empty", alert
+          if (!content){
+            alert("Sorry, can't add empty item.")
+          }
+          //else add it to the list and show it
+          else{
+            $.ajax({
+              type: 'POST',
+              url:'http://127.0.0.1:5000/',
+              data: $('#formAdd').serialize(),
+              dataType: 'json',
+              success: function(response){
+                console.log("response");
+              },
+              error: function(error){
+                console.log(error);
+              }
+            }); //end of ajax call
+
+            var contentInList = $("<li>").text(content);
+            //insert it into the list 
+            contentInList.hide()
+                         .prependTo('.list')      
+                         .fadeIn();
+          }
+
+          //remove the contents in the form
+          $("#eachItem").val("")
+                        .focus();
+
+        });//end of submit event function.
+
+        //implementation of deleting lists
+        //using event delegation to affect all the lists that might be added later on.
+        $(".list").on("mouseenter", "li", function(){
+          $("<button> Done! </button>")
+          .hide()
+          .appendTo($(this))
+          .fadeIn();
+
+          $("button").on("click", function(){
+            $.ajax({
+              type: "DELETE",
+              data: $(this).closest("li"),
+              url: 'http://127.0.0.1:5000/',
+              success: function(result){
+                console.log("Deletition completed!");
+              }
+            });
+
+            $(this).closest("li").fadeOut();
+
+          });
+        })
+
+        .on("mouseleave", "li", function(){
+          $(this).children("button").remove();
+        });
+
+      }//end of addToDoList function
+	
+      $(".todolist").addToDoList();
+
+    }); //end of non-conflict function
+  </script>
+</head>
+
+<body>
+  <div class="todolist">
+
+  </div>
+</body>
+
+</html>
